@@ -2,6 +2,12 @@
 .venv/
 __pycache__/
 .pytest_cache/
-*.py[cod]
-.idea/
-.vscode/
+.ruff_cache/
+*.pyc
+.streamlit/secrets.toml
+data/*.sqlite3
+data/*.db
+config/pending_recommendation.json
+config/approved.json
+logs/
+.DS_Store

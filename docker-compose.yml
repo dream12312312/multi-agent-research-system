@@ -1,0 +1,25 @@
+services:
+  mcp:
+    build: .
+    command: ["python", "-m", "mars.mcp.server"]
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    ports:
+      - "8765:8765"
+    restart: unless-stopped
+
+  app:
+    build: .
+    env_file: .env
+    environment:
+      MCP_HOST: mcp
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    ports:
+      - "8501:8501"
+    depends_on:
+      - mcp
+    restart: unless-stopped
