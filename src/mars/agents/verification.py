@@ -131,9 +131,5 @@ Do not invent evidence or sources.
         **state,
         "verification": verification,
         "citations": citations,
-        "final_answer": (
-            f"## Answer\n\n{state.get('analysis', '').strip()}\n\n"
-            f"## Verification\n\n{verification.strip()}"
-        ),
-        "next_agent": "memory",
+        "next_agent": "answer",
     }

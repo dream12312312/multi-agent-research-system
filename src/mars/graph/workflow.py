@@ -4,6 +4,7 @@ from mars.schemas.state import ResearchState
 from mars.agents.research import research_node
 from mars.agents.analysis import analysis_node
 from mars.agents.verification import verification_node
+from mars.agents.answer import answer_node
 from mars.agents.memory import memory_node
 
 def supervisor_node(state: ResearchState) -> ResearchState:
@@ -16,6 +17,7 @@ def supervisor_node(state: ResearchState) -> ResearchState:
     if not state.get("search_results"): next_agent="research"
     elif not state.get("analysis"): next_agent="analysis"
     elif not state.get("verification"): next_agent="verification"
+    elif not state.get("final_answer"): next_agent="answer"
     else: next_agent="memory"
     return {**state,"next_agent":next_agent}
 
@@ -27,12 +29,14 @@ def build_graph():
     g.add_node("research", research_node)
     g.add_node("analysis", analysis_node)
     g.add_node("verification", verification_node)
+    g.add_node("answer", answer_node)
     g.add_node("memory", memory_node)
     g.add_edge(START,"supervisor")
-    g.add_conditional_edges("supervisor", route, {"research":"research","analysis":"analysis","verification":"verification","memory":"memory"})
+    g.add_conditional_edges("supervisor", route, {"research":"research","analysis":"analysis","verification":"verification","answer":"answer","memory":"memory"})
     g.add_edge("research","supervisor")
     g.add_edge("analysis","supervisor")
     g.add_edge("verification","supervisor")
+    g.add_edge("answer","supervisor")
     g.add_edge("memory",END)
     return g.compile()
 

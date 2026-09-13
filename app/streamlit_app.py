@@ -66,6 +66,46 @@ with st.expander("Current approved configuration", expanded=False):
     except FileNotFoundError:
         st.warning(f"No approved config found at {path}")
 
+# --- Manual configuration editing (no advisor approval required) ---
+st.subheader("Manual configuration editor")
+st.caption("Directly edit and save the approved configuration without going through the advisor.")
+try:
+    _cfg=json.loads(path.read_text())
+except FileNotFoundError:
+    _cfg=None
+    st.warning(f"No approved config found at {path}; cannot edit manually.")
+if _cfg is not None:
+    with st.form("manual_config_form"):
+        c1,c2,c3=st.columns(3)
+        model=c1.text_input("Model",value=_cfg.get("model",""))
+        temperature=c2.number_input("Temperature",min_value=0.0,max_value=2.0,step=0.05,value=float(_cfg.get("temperature",0.0)))
+        max_tokens=c3.number_input("Max tokens",min_value=1,step=1,value=int(_cfg.get("max_tokens",1024)))
+        colp,colr=st.columns(2)
+        with colp:
+            st.markdown("**Prompts**")
+            prompts_txt=st.text_area("Prompts (JSON object)",value=json.dumps(_cfg.get("prompts",{}),indent=2),height=200)
+        with colr:
+            st.markdown("**Routing**")
+            routing_txt=st.text_area("Routing (JSON object)",value=json.dumps(_cfg.get("routing",{}),indent=2),height=200)
+        if st.form_submit_button("Save configuration",type="primary"):
+            try:
+                new_cfg=dict(_cfg)
+                if model.strip(): new_cfg["model"]=model.strip()
+                new_cfg["temperature"]=float(temperature)
+                new_cfg["max_tokens"]=int(max_tokens)
+                new_cfg["prompts"]=json.loads(prompts_txt)
+                new_cfg["routing"]=json.loads(routing_txt)
+                if not isinstance(new_cfg["prompts"],dict) or not isinstance(new_cfg["routing"],dict):
+                    st.error("Prompts and Routing must be JSON objects ({}).")
+                else:
+                    path.write_text(json.dumps(new_cfg,indent=2))
+                    st.success("Configuration saved manually. Redeploy/restart the service to apply it.")
+                    st.rerun()
+            except json.JSONDecodeError as e:
+                st.error(f"Invalid JSON: {e}")
+            except Exception as e:
+                st.error(f"Failed to save configuration: {e}")
+
 if st.button("Analyze recent Langfuse traces"):
     with st.spinner("Analyzing observability data…"):
         rec=ConfigurationAdvisor().analyze(recent_observations())
